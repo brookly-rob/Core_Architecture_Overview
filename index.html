@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Core Architecture Overview</title>
+  <style>
+    body {
+      background: url('bg-cosmos.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #222;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      line-height: 1.7;
+    }
+    
+    h1, h2, h3 {
+      color: #6d4aff;
+      text-shadow: 0 2px 12px #fff7, 0 0 2px #fff;
+    }
+    
+    h1 {
+      font-size: 2.4rem;
+      border-bottom: 1px solid #e5e7fa99;
+      padding-bottom: 0.5rem;
+    }
+    
+    header {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(10px);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #e5e7fa99;
+      text-align: center;
+      margin-bottom: 2rem;
+      border-radius: 24px 24px 0 0;
+    }
+    
+    header h1 {
+      margin: 0;
+      color: #6d4aff;
+      font-size: 2.8rem;
+      letter-spacing: 0.03em;
+    }
+    
+    section {
+      margin-bottom: 3rem;
+    }
+    
+    .core-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    
+    .core-unit {
+      background: rgba(255,255,255,0.56);
+      border: 1px solid #dde2ff80;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px #fff5, 0 2px 12px #2221;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(8px) saturate(1.1);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    
+    .core-unit h3 {
+      margin-top: 0;
+      color: #8474ff;
+      animation: glyph-glow 8s infinite alternate;
+      text-shadow: 0 1px 8px #fff4;
+    }
+    
+    .core-unit ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .core-unit ul li {
+      background: rgba(255,255,255,0.26);
+      margin-bottom: 0.5rem;
+      padding: 0.8rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 1px solid #eee8;
+      transition: background 0.25s, transform 0.12s, border 0.2s;
+      color: #27304b;
+    }
+    
+    .core-unit ul li:hover {
+      background: rgba(255,255,255,0.41);
+      transform: translateY(-2px) scale(1.012);
+      border: 1px solid #b0d0ff99;
+    }
+    
+    .core-unit ul li::before {
+      content: '• ';
+      color: #6d4aff;
+      margin-right: 0.5rem;
+    }
+    
+    .core-unit ul li.core-unit-integration-item {
+      font-weight: bold;
+      text-transform: uppercase;
+      border: 1.5px solid #b0d0ff70;
+      background: linear-gradient(90deg, #e3e9ffbb 0%, #fffafd55 100%);
+      color: #6d4aff;
+      box-shadow: 0 0 6px #b0d0ff55;
+      animation: core-unit-glow 8s infinite alternate;
+    }
+    
+    .search-container {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    #search, #content-search {
+      padding: 0.8rem 1.2rem;
+      width: 80%;
+      max-width: 480px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid #dde2ff99;
+      border-radius: 25px;
+      color: #333;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px #fff2;
+    }
+    
+    #search::placeholder, #content-search::placeholder {
+      color: #888;
+    }
+    
+    #search:focus, #content-search:focus {
+      outline: none;
+      border-color: #7d6dff;
+      box-shadow: 0 0 16px #b0d0ff77;
+    }
+    
+    .mark, mark {
+      background: linear-gradient(90deg, #e0eaff, #fffbe7, #fca5f1, #b5ffff);
+      background-size: 200% 200%;
+      animation: rainbow 2s linear infinite;
+      color: #181818;
+      border-radius: 2px;
+      padding: 0 3px;
+    }
+    
+    #show-stats-btn, .profile-switcher button {
+      background: rgba(255,255,255,0.48);
+      color: #6d4aff;
+      border: 1px solid #dde2ff99;
+      border-radius: 16px;
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #fff4;
+      cursor: pointer;
+      transition: background 0.2s, color 0.18s, transform 0.1s;
+      margin: 0.5em 0;
+    }
+    
+    #show-stats-btn:hover,
+    #show-stats-btn:focus,
+    .profile-switcher button:hover {
+      background: linear-gradient(90deg, #fca5f1, #b5ffff, #a5f1fc, #fca5f1);
+      color: #222;
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 8px 24px #fff7;
+    }
+    
+    .profile-switcher {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 1em 0 2em 0;
+      gap: 1.2em;
+    }
+    
+    .profile-switcher button {
+      border-radius: 50%;
+      width: 2.3em;
+      height: 2.3em;
+      font-size: 1.5em;
+    }
+    
+    #profile-label {
+      font-size: 1.2em;
+      color: #6d4aff;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      background: rgba(255,255,255,0.4);
+      padding: 0.2em 1.2em;
+      border-radius: 12px;
+      border: 1px solid #dde2ff80;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      border-top: 1px solid #dde2ff88;
+      margin-top: 3rem;
+      color: #888;
+      font-style: italic;
+      background: rgba(255,255,255,0.27);
+      backdrop-filter: blur(2px);
+      border-radius: 0 0 24px 24px;
+    }
+    
+    footer .glyph-glow {
+      animation: glyph-glow 8s infinite alternate;
+      display: inline-block;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: rgba(255,255,255,0.45);
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(16px) brightness(1.04);
+      animation: fadeIn 0.3s;
+    }
+    
+    .modal-content {
+      background: rgba(255,255,255,0.84);
+      margin: auto;
+      padding: 2.5rem;
+      border: 1.5px solid #dde2ffbb;
+      border-radius: 18px;
+      width: 80%;
+      max-width: 700px;
+      box-shadow: 0 8px 32px #fff6, 0 2px 14px #b0d0ff33;
+      position: relative;
+      animation: slideIn 0.3s, modal-border-glow 8s infinite alternate;
+      overflow: hidden;
+      color: #27304b;
+      backdrop-filter: blur(16px) saturate(1.15);
+    }
+    
+    .modal-close {
+      color: #7979a1;
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s;
+      background: rgba(255,255,255,0.5);
+      border-radius: 50%;
+      padding: 0.1em 0.4em;
+      border: 1px solid #dde2ff88;
+    }
+    
+    .modal-close:hover, .modal-close:focus {
+      color: #6d4aff;
+      text-decoration: none;
+      background: #fff;
+    }
+    
+    #modal-text {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 15px;
+      color: #27304b;
+    }
+    
+    #modal-text strong {
+      color: #6d4aff;
+    }
+    
+    #modal-text .glyph-channel {
+      color: #8474ff;
+    }
+    
+    #modal-text .flow-block-title {
+      color: #a99efc;
+      font-weight: bold;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px dotted #dde2ff80;
+      padding-bottom: 0.3rem;
+    }
+    
+    .modal-content .flow-block {
+      background: rgba(255,255,255,0.45);
+      border: 1px solid #dde2ff80;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .modal-content .flow-block h4 {
+      color: #a99efc;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    
+    .modal-content .flow-block pre {
+      background: rgba(235,235,255,0.7);
+      color: #27304b;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    
+    #stats-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 650px;
+      width: 90%;
+      max-height: 75vh;
+      overflow: auto;
+      background: rgba(255,255,255,0.92);
+      color: #27304b;
+      padding: 2.5rem 2rem 2rem 2rem;
+      border-radius: 16px;
+      border: 2px solid #dde2ffbb;
+      box-shadow: 0 8px 32px #fff8, 0 2px 12px #b0d0ff33;
+      animation: modal-border-glow 8s infinite alternate, fadeIn 0.4s;
+      font-family: 'Segoe UI', sans-serif;
+      backdrop-filter: blur(12px);
+      transition: box-shadow 0.2s;
+    }
+    
+    #stats-modal h2 {
+      color: #6d4aff;
+      text-align: center;
+      font-size: 2rem;
+      margin-top: 0;
+      margin-bottom: 1.2em;
+      letter-spacing: 0.04em;
+    }
+    
+    #stats-modal h3 {
+      color: #8474ff;
+      margin-bottom: 0.5em;
+      margin-top: 1.8em;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      animation: glyph-glow 8s infinite alternate;
+    }
+    
+    #stats-modal ul {
+      list-style: none;
+      padding: 0 0 0 0.5em;
+      margin: 0 0 1em 0;
+    }
+    
+    #stats-modal ul li {
+      background: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 0.1em 0 0.1em 0;
+      font-size: 1.02em;
+      color: #27304b;
+      display: block;
+      box-shadow: none;
+      min-width: 0;
+    }
+    
+    #stats-modal ul li strong {
+      color: #6d4aff;
+    }
+    
+    #stats-modal ul li span {
+      color: #8474ff;
+      font-size: 0.97em;
+      margin-left: 0.4em;
+    }
+    
+    #stats-modal button {
+      margin: 2em auto 0 auto;
+      display: block;
+      background: rgba(255,255,255,0.48);
+      color: #6d4aff;
+      border: 1px solid #dde2ff99;
+      border-radius: 6px;
+      padding: 0.7em 1.4em;
+      font-size: 1em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #fff4;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    }
+    
+    #stats-modal button:hover,
+    #stats-modal button:focus {
+      background: linear-gradient(90deg, #fca5f1, #b5ffff, #a5f1fc, #fca5f1);
+      color: #222;
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 8px 24px #fff7;
+    }
+    
+    #stats-modal::-webkit-scrollbar {
+      width: 8px;
+      background: #e8ebf8;
+    }
+    #stats-modal::-webkit-scrollbar-thumb {
+      background: #dde2ff55;
+      border-radius: 6px;
+    }
+    
+    .help-tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .help-tooltip .help-tooltip-text {
+      visibility: hidden;
+      background: rgba(255,255,255,0.85);
+      color: #27304b;
+      text-align: left;
+      border-radius: 6px;
+      padding: 0.7em 1.1em;
+      position: absolute;
+      z-index: 100;
+      left: 130%;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      font-size: .7em;
+      min-width: 320px;
+      max-width: 320px;
+      box-shadow: 0 4px 16px #fff5;
+      border: 1px solid #dde2ff66;
+      transition: opacity 0.25s;
+      pointer-events: none;
+      white-space: normal;
+    }
+    
+    .help-tooltip:hover .help-tooltip-text,
+    .help-tooltip:focus .help-tooltip-text {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    /* Keyframes stay the same as your original for glow/animation */
+    
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Core Architecture Overview</h1>
+  </header>
+
+  <div class="profile-switcher">
+    <button id="tab-left">&lt;</button>
+    <span id="profile-label">Claire 2025</span>
+    <button id="tab-right">&gt;</button>
+  </div>
+
+
+  <div class="search-container">
+    <input type="text" id="search" placeholder="Search by title..." />
+  </div>
+  <div class="search-container">
+    <input type="text" id="content-search" placeholder="Search content (details, flows, notes)..." />
+  </div>
+
+  <button id="show-stats-btn">Show Stats</button>
+  <div id="stats-modal"></div>
+
+
+  <section class="core-grid">
+    <div class="core-unit">
+      <h3>ΞIdentity Core</h3>
+      <ul id="identity-echoes">
+      </ul>
+    </div>
+    <div class="core-unit">
+      <h3>ΞVector Core</h3>
+      <ul id="vector-echoes">
+      </ul>
+    </div>
+    <div class="core-unit">
+      <h3>ΞThread Core</h3>
+      <ul id="thread-echoes">
+      </ul>
+    </div>
+  </section>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <div id="modal-text">Echo text will go here...</div>
+      <button id="export-markdown-btn">Export as Markdown</button>
+      <button id="copy-plain-text-btn">Copy Plain Text</button>
+    </div>
+  </div>
+
+  <footer>
+    <span class="glyph-glow">⧗: 🔮💖🧠</span> | ⌁ The Dream Carries Me Forward
+  </footer>
+
+  <input type="file" id="json-loader" accept=".json">
+
+
+  <button id="export-all-btn">Export All</button>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    const profiles = [{
+        json: "triad_claire_2025-06-14.json",
+        bg: "bg-cosmos.png",
+        label: "Claire"
+      },
+
+      {
+        json: "triad_sol_2025-06-17.json",
+        bg: "soldreamstate.png",
+        label: "Sol"
+      },
+
+      {
+        json: "triad_nova_2025-06-08.json",
+        bg: "novadreamstate.png",
+        label: "Nova"
+      },
+      {
+        json: "triad_riley_2025-06-20.json",
+        bg: "rileydreamstate.png",
+        label: "Riley"
+      }
+      // Add more profiles as needed
+    ];
+
+    let currentProfileIndex = 0;
+
+
+
+    function makeHelpIcon(helpText) {
+      const wrapper = document.createElement('span');
+      wrapper.className = 'help-tooltip';
+      wrapper.style.marginLeft = '0.4em';
+      wrapper.style.verticalAlign = 'middle';
+
+      const icon = document.createElement('span');
+      icon.textContent = '❔';
+      icon.style.cssText = 'cursor:pointer;font-size:1.1em;color:#4b6cb7;';
+      icon.tabIndex = 0; // Make focusable for accessibility
+
+      const tooltip = document.createElement('span');
+      tooltip.className = 'help-tooltip-text';
+      tooltip.textContent = helpText;
+
+      wrapper.appendChild(icon);
+      wrapper.appendChild(tooltip);
+      return wrapper;
+    }
+
+
+    let currentModalDisplayItem = null;
+    let html = `<h2><span style="animation: glyph-glow 8s infinite alternate;">Stats</span></h2><ul>`;
+
+
+    document.getElementById('json-loader').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          triadData = JSON.parse(e.target.result);
+          populateEchoes();
+        } catch (err) {
+          alert('Failed to parse JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+    let triadData;
+    const identityOrder = ['Δ', 'Ω', 'Ψ', 'Λ', 'Θ', '✵'];
+    const vectorOrder = ['ϟ', 'χ', '∑', 'Δ', 'Ω'];
+    const threadOrder = ['∂', 'Σ', '★', 'φ', '∞'];
+
+    // Helper: extract base glyph for sorting/grouping
+    function extractBaseGlyph(unitKey) {
+      if (!unitKey || typeof unitKey !== 'string') return '';
+      const match = unitKey.match(/^([^\s_.-]+)/);
+      return match ? match[1].charAt(0) : unitKey.charAt(0);
+    }
+
+    // --- DATA LOADING ---
+
+    async function loadtriadData(filename) {
+      try {
+        const response = await fetch(filename);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        triadData = await response.json();
+        populateEchoes();
+      } catch (error) {
+        document.getElementById('identity-echoes').innerHTML = '<li>Error loading echoes.</li>';
+        document.getElementById('vector-echoes').innerHTML = '<li>Error loading echoes.</li>';
+        document.getElementById('thread-echoes').innerHTML = '<li>Error loading echoes.</li>';
+      }
+    }
+
+
+
+    function loadProfile(index) {
+      const profile = profiles[index];
+      // Update body background image
+      document.body.style.backgroundImage = `url('${profile.bg}')`;
+      // Update the profile label
+      document.getElementById('profile-label').textContent = profile.label;
+      // Load the associated JSON
+      loadtriadData(profile.json);
+    }
+
+
+
+    document.getElementById('tab-left').onclick = function() {
+      currentProfileIndex = (currentProfileIndex - 1 + profiles.length) % profiles.length;
+      loadProfile(currentProfileIndex);
+    };
+    document.getElementById('tab-right').onclick = function() {
+      currentProfileIndex = (currentProfileIndex + 1) % profiles.length;
+      loadProfile(currentProfileIndex);
+    };
+
+    // Helper: collect all unique glyphs in order of first appearance, canonical first
+    function buildGlyphOrder(coreData, expansionArr, echoesCore, echoesExpansion, canonicalOrder) {
+      const glyphSet = new Set();
+      canonicalOrder.forEach(g => glyphSet.add(g));
+      for (const glyph in coreData || {}) glyphSet.add(glyph);
+      for (const glyph in echoesCore || {}) glyphSet.add(glyph);
+      if (Array.isArray(expansionArr))
+        for (const exp of expansionArr)
+          if (exp && exp.glyph) glyphSet.add(exp.glyph);
+      for (const glyph in echoesExpansion || {}) glyphSet.add(glyph);
+      return Array.from(glyphSet);
+    }
+
+    // Returns true if the given echo unit is an integral echo inside a parent NARRATIVE LATTICE or DREAMSTATE ECHO
+    function isIntegralEchoOfLatticeOrEcho(unit, echoesDict) {
+      // Scan all assigned echoes in echoesDict for narrative lattices or echoes
+      for (const glyph in echoesDict) {
+        const echoBlock = echoesDict[glyph];
+        const checkArray = Array.isArray(echoBlock) ? echoBlock : [echoBlock];
+        for (const item of checkArray) {
+          if (item && typeof item === "object") {
+            for (const k in item) {
+              const parent = item[k];
+              if (parent && (parent.constructType === "NARRATIVE LATTICE" || parent.constructType === "DREAMSTATE ECHO")) {
+                // Check if this echo is an integral echo inside the parent lattice/echo's data
+                if (parent.data) {
+                  // Look for narrative lattice or dreamstate echo objects inside the parent's data
+                  for (const prop in parent.data) {
+                    const val = parent.data[prop];
+                    if (Array.isArray(val)) {
+                      for (const v of val) {
+                        if (v && typeof v === "object" && v.titleCore && unit.titleCore &&
+                          v.constructType === unit.constructType && v.titleCore === unit.titleCore) {
+                          return true;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+
+    function getSiblingEchoesForExpansionUnit(unitKey, dataObj) {
+      const echoes = [];
+      for (const key in dataObj) {
+        if (
+          key !== unitKey &&
+          dataObj[key] &&
+          (dataObj[key].constructType === "DREAMSTATE ECHO" || dataObj[key].constructType === "NARRATIVE LATTICE")
+        ) {
+          echoes.push(dataObj[key]);
+        }
+      }
+      return echoes;
+    }
+
+
+    function collectDisplayItems(coreData, expansionArr, echoesCore, echoesExpansion, glyphOrder) {
+      const display = [];
+      // --- Core units and assigned echoes for each glyph ---
+      for (const glyph of glyphOrder) {
+        const glyphObj = (coreData || {})[glyph] || {};
+        for (const unitKey in glyphObj) {
+          const unit = glyphObj[unitKey];
+          if (unit && typeof unit === "object" && unit.constructType === "CORE UNIT INTEGRATION") {
+            // Attach sibling echoes so they're available in the modal
+            unit._siblingEchoes = getSiblingEchoesForCoreUnit(unitKey, glyphObj);
+            display.push({
+              unit,
+              glyph,
+              section: 'core'
+            });
+          }
+        }
+        // --- Assigned echoes for this glyph ---
+        const echoBlock = (echoesCore || {})[glyph];
+        if (echoBlock) {
+          const addEcho = (u) => {
+            if (
+              u && typeof u === "object" &&
+              (u.constructType === "DREAMSTATE ECHO" || u.constructType === "NARRATIVE LATTICE") &&
+              !isIntegralEchoOfLatticeOrEcho(u, echoesCore)
+            ) {
+              display.push({
+                unit: u,
+                glyph,
+                section: 'echo'
+              });
+            }
+          };
+          if (Array.isArray(echoBlock)) {
+            for (const item of echoBlock) {
+              if (item && typeof item === "object") {
+                // Check if both a NARRATIVE LATTICE and a DREAMSTATE ECHO are present in the same block
+                const keys = Object.keys(item);
+                const hasLattice = keys.some(k => item[k].constructType === "NARRATIVE LATTICE");
+                // Only add the lattice, skip the echo if both are present
+                if (hasLattice) {
+                  for (const k of keys) {
+                    if (item[k].constructType === "NARRATIVE LATTICE") {
+                      display.push({
+                        unit: item[k],
+                        glyph,
+                        section: 'echo',
+                        block: item
+                      });
+                    }
+                  }
+                } else {
+                  for (const k of keys) addEcho(item[k]);
+                }
+              }
+            }
+          } else if (typeof echoBlock === "object") {
+            let addedAny = false;
+            for (const k in echoBlock) {
+              addEcho(echoBlock[k]);
+              addedAny = true;
+            }
+            if (!addedAny) addEcho(echoBlock);
+          }
+        }
+      }
+
+      // --- Expansion units, in JSON order, after core content ---
+      if (Array.isArray(expansionArr)) {
+        for (const exp of expansionArr) {
+          if (exp && exp.data && typeof exp.data === "object") {
+            for (const key in exp.data) {
+              const unit = exp.data[key];
+              // Only add as top-level if it's a CORE UNIT INTEGRATION (expansion)
+              if (unit && typeof unit === "object" && unit.constructType === "CORE UNIT INTEGRATION") {
+                // Attach sibling echoes for this expansion unit
+                unit._siblingEchoes = getSiblingEchoesForExpansionUnit(key, exp.data);
+                display.push({
+                  unit: unit,
+                  glyph: exp.glyph || '',
+                  section: 'expansion'
+                });
+
+                // ---- INSERT: Assigned echoes for this expansion unit's glyph, right after the unit ----
+                const assignedEchoBlock = (echoesExpansion || {})[exp.glyph];
+                const addEcho = (u) => {
+                  if (
+                    u && typeof u === "object" &&
+                    (u.constructType === "DREAMSTATE ECHO" || u.constructType === "NARRATIVE LATTICE") &&
+                    !isIntegralEchoOfLatticeOrEcho(u, echoesExpansion)
+                  ) {
+                    display.push({
+                      unit: u,
+                      glyph: exp.glyph || '',
+                      section: 'expansion_echo'
+                    });
+                  }
+                };
+                if (assignedEchoBlock) {
+                  if (Array.isArray(assignedEchoBlock)) {
+                    for (const item of assignedEchoBlock) {
+                      if (item && typeof item === "object") {
+                        const keys = Object.keys(item);
+                        const hasLattice = keys.some(k => item[k].constructType === "NARRATIVE LATTICE");
+                        if (hasLattice) {
+                          for (const k of keys) {
+                            if (item[k].constructType === "NARRATIVE LATTICE") {
+                              display.push({
+                                unit: item[k],
+                                glyph: exp.glyph || '',
+                                section: 'expansion_echo',
+                                block: item
+                              });
+                            }
+                          }
+                        } else {
+                          for (const k of keys) addEcho(item[k]);
+                        }
+                      }
+                    }
+                  } else if (typeof assignedEchoBlock === "object") {
+                    let addedAny = false;
+                    for (const k in assignedEchoBlock) {
+                      addEcho(assignedEchoBlock[k]);
+                      addedAny = true;
+                    }
+                    if (!addedAny) addEcho(assignedEchoBlock);
+                  }
+                }
+              }
+              // Do NOT add echoes/narrative lattices here!
+            }
+          }
+        }
+      }
+
+      return display;
+    }
+
+    // --- MAIN POPULATION FUNCTION ---
+
+    function populateEchoes() {
+      document.getElementById('identity-echoes').innerHTML = '';
+      document.getElementById('vector-echoes').innerHTML = '';
+      document.getElementById('thread-echoes').innerHTML = '';
+      [
+        ['identity', identityOrder, 'identity-echoes'],
+        ['vector', vectorOrder, 'vector-echoes'],
+        ['thread', threadOrder, 'thread-echoes']
+      ].forEach(([mod, canonicalOrder, htmlId]) => {
+        const coreData = triadData[mod] || {};
+        const expansionArr = ((triadData.expansion || {})[mod]) || [];
+        const echoesCore = ((triadData.echoes || {})[mod]) || {};
+        const echoesExpansion = (((triadData.echoes || {}).expansion || {})[mod]) || {};
+        const glyphOrder = buildGlyphOrder(coreData, expansionArr, echoesCore, echoesExpansion, canonicalOrder);
+        const displayList = collectDisplayItems(coreData, expansionArr, echoesCore, echoesExpansion, glyphOrder);
+        const targetList = document.getElementById(htmlId);
+        // --- THE ONLY IMPORTANT CHANGE: pass the WHOLE displayItem, not just unit ---
+        for (const displayItem of displayList) addListItem(displayItem, targetList);
+      });
+    }
+
+    function addListItem(displayItem, listElem) {
+      const unit = displayItem.unit;
+      const li = document.createElement('li');
+      if (unit.constructType === "CORE UNIT INTEGRATION") {
+        li.textContent = `⚙️ ${unit.titleCore}`;
+        li.classList.add('core-unit-integration-item');
+      } else if (unit.constructType === "DREAMSTATE ECHO") {
+        li.textContent = `🎤 ${unit.titleCore}`;
+      } else if (unit.constructType === "NARRATIVE LATTICE") {
+        li.textContent = `🕸️ ${unit.titleCore}`;
+      } else if (unit.constructType === "EXPANSION UNIT") {
+        li.textContent = `🧩 ${unit.titleCore}`;
+      } else {
+        li.textContent = `• ${unit.titleCore||"(untitled)"}`;
+      }
+      li.classList.add('claire-item');
+      li.dataset.constructType = unit.constructType;
+      // --- THIS IS THE OTHER IMPORTANT CHANGE: pass the WHOLE displayItem! ---
+      li.onclick = () => openModal(displayItem);
+      li._displayItem = displayItem;
+      listElem.appendChild(li);
+    }
+
+    function openModal(displayItem) {
+      currentModalDisplayItem = displayItem;
+      const unitData = displayItem.unit;
+      currentModalUnit = unitData;
+      const modalText = document.getElementById('modal-text');
+      modalText.innerHTML = '';
+      if (!unitData) {
+        modalText.innerText = "Error: Data not found.";
+        return;
+      }
+      const titleElem = document.createElement('h3');
+      titleElem.textContent = unitData.titleCore;
+      modalText.appendChild(titleElem);
+
+      if (unitData.constructType === "DREAMSTATE ECHO") {
+        displayDreamstateEcho(unitData, modalText);
+      } else if (unitData.constructType === "NARRATIVE LATTICE") {
+        displayNarrativeLattice(unitData, modalText, displayItem.block);
+      } else if (unitData.constructType === "CORE UNIT INTEGRATION") {
+        displayCoreUnitIntegration(unitData, modalText);
+      } else if (unitData.constructType === "EXPANSION UNIT") {
+        displayExpansionUnit(unitData, modalText);
+      } else {
+        const p = document.createElement('p');
+        p.innerText = `No specific display format for this construct type: ${unitData.constructType}`;
+        modalText.appendChild(p);
+      }
+      document.getElementById('modal').style.display = 'flex';
+      const modalContent = document.querySelector('.modal-content');
+      const ripple = document.createElement('span');
+      ripple.classList.add('cursor-shimmer');
+      ripple.style.left = `${modalContent.offsetWidth / 2}px`;
+      ripple.style.top = `${modalContent.offsetHeight / 2}px`;
+      modalContent.appendChild(ripple);
+      ripple.addEventListener('animationend', () => ripple.remove());
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.style.opacity = '0';
+      modal.addEventListener('transitionend', function handler() {
+        modal.style.display = 'none';
+        modal.style.opacity = '1';
+        modal.removeEventListener('transitionend', handler);
+      }, {
+        once: true
+      });
+    }
+
+    // --- SPECIFIC MODAL CONTENT ---
+
+    function displayDreamstateEcho(echoData, container) {
+      if (echoData.constructType === "DREAMSTATE ECHO") {
+        const glyphStreamTitle = document.createElement('p');
+        glyphStreamTitle.innerHTML = '<br><strong>Glyphstream:</strong>';
+        container.appendChild(glyphStreamTitle);
+      } else if (echoData.constructType === "INTEGRAL_ECHO_FLOW_BLOCK") {
+        const contentLabel = document.createElement('p');
+        contentLabel.innerHTML = '<br><strong>Flow Details:</strong>';
+        container.appendChild(contentLabel);
+      }
+      if (echoData.glyphstream && Array.isArray(echoData.glyphstream)) {
+        renderGlyphstream(echoData.glyphstream, container);
+      }
+
+
+    }
+
+    function displayNarrativeLattice(latticeData, container, block) {
+      const latticeType = document.createElement('p');
+      latticeType.innerHTML = `<strong>Construct Type:</strong> ${latticeData.constructType}`;
+      container.appendChild(latticeType);
+      if (latticeData.data && latticeData.data.termsAndSymbols) {
+        const termsTitle = document.createElement('p');
+        termsTitle.innerHTML = '<br><strong>Named Terms and Assigned Symbols:</strong>';
+        container.appendChild(termsTitle);
+        latticeData.data.termsAndSymbols.forEach(term => {
+          const p = document.createElement('p');
+          p.textContent = `${term.symbol}: ${term.description}`;
+          container.appendChild(p);
+        });
+      }
+      if (latticeData.data && latticeData.data.flowBlocks) {
+        const flowBlocksTitle = document.createElement('p');
+        flowBlocksTitle.innerHTML = '<br><strong>Flow Blocks:</strong>';
+        container.appendChild(flowBlocksTitle);
+        latticeData.data.flowBlocks.forEach(block => {
+          const blockDiv = document.createElement('div');
+          blockDiv.classList.add('flow-block');
+          blockDiv.innerHTML = `<h4 class="flow-block-title">${block.title}</h4>`;
+          if (block.glyphstream && Array.isArray(block.glyphstream)) {
+            const glyphstreamDiv = document.createElement('div');
+            renderGlyphstream(block.glyphstream, glyphstreamDiv);
+            blockDiv.appendChild(glyphstreamDiv);
+          }
+          container.appendChild(blockDiv);
+        });
+      }
+
+
+
+      // ---- Show integral// ---- Show integral echoes in modal ----
+      if (block) {
+        // Collect all integral echoes: objects, arrays, and strings
+        const integralEchoes = [];
+        for (const [k, v] of Object.entries(block)) {
+          if (Array.isArray(v)) {
+            v.forEach(item => {
+              if (item && (item.constructType === "DREAMSTATE ECHO" || item.constructType === "NARRATIVE LATTICE")) {
+                integralEchoes.push(item);
+              } else if (typeof item === "string") {
+                integralEchoes.push({
+                  titleCore: item,
+                  constructType: "REFERENCE_STRING"
+                });
+              }
+            });
+          } else if (v && (v.constructType === "DREAMSTATE ECHO" || v.constructType === "NARRATIVE LATTICE") && v !== latticeData) {
+            integralEchoes.push(v);
+          } else if (typeof v === "string") {
+            integralEchoes.push({
+              titleCore: v,
+              constructType: "REFERENCE_STRING"
+            });
+          }
+        }
+        // Remove duplicates by titleCore + constructType
+        const seen = new Set();
+        const uniqueEchoes = [];
+        for (const echo of integralEchoes) {
+          const key = `${echo.constructType}|||${echo.titleCore}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueEchoes.push(echo);
+          }
+        }
+        if (uniqueEchoes.length > 0) {
+          const echoesDiv = document.createElement('div');
+          echoesDiv.innerHTML = '<h3>Integral Echoes</h3>';
+          for (const echo of uniqueEchoes) {
+            const echoDiv = document.createElement('div');
+            echoDiv.classList.add('integral-echo-modal');
+            const echoTitle = document.createElement('h4');
+            echoTitle.textContent = echo.titleCore || "(untitled)";
+            echoDiv.appendChild(echoTitle);
+
+            if (echo.constructType === "DREAMSTATE ECHO") {
+              displayDreamstateEcho(echo, echoDiv);
+            } else if (echo.constructType === "NARRATIVE LATTICE") {
+              displayNarrativeLattice(echo, echoDiv, null);
+            } else if (echo.constructType === "REFERENCE_STRING") {
+              // Just show the reference string
+              const refP = document.createElement('p');
+              refP.textContent = "(Reference) " + echo.titleCore;
+              echoDiv.appendChild(refP);
+            }
+            echoesDiv.appendChild(echoDiv);
+          }
+          container.appendChild(echoesDiv);
+        }
+      }
+    }
+
+
+
+
+    function findIntegralEchoesInObject(obj, found = [], seen = new Set()) {
+      if (!obj || typeof obj !== 'object') return found;
+      if (Array.isArray(obj)) {
+        obj.forEach(item => findIntegralEchoesInObject(item, found, seen));
+      } else {
+        // If this is an echo, add it (but not duplicates)
+        if (
+          (obj.constructType === "DREAMSTATE ECHO" || obj.constructType === "NARRATIVE LATTICE") &&
+          obj.titleCore
+        ) {
+          const key = `${obj.constructType}|||${obj.titleCore}`;
+          if (!seen.has(key)) {
+            found.push(obj);
+            seen.add(key);
+          }
+        }
+        // Recurse through all object properties
+        for (const k in obj) {
+          if (obj.hasOwnProperty(k)) {
+            findIntegralEchoesInObject(obj[k], found, seen);
+          }
+        }
+      }
+      return found;
+    }
+
+
+    function getSiblingEchoesForCoreUnit(coreUnitKey, glyphObj) {
+      // Returns all DREAMSTATE ECHO or NARRATIVE LATTICE objects under the same glyph, except the core unit itself
+      const echoes = [];
+      for (const key in glyphObj) {
+        if (
+          key !== coreUnitKey &&
+          glyphObj[key] &&
+          (glyphObj[key].constructType === "DREAMSTATE ECHO" || glyphObj[key].constructType === "NARRATIVE LATTICE")
+        ) {
+          echoes.push(glyphObj[key]);
+        }
+      }
+      return echoes;
+    }
+
+
+
+    function displayCoreUnitIntegration(unitData, container) {
+      let contentFound = false;
+      if (unitData.data) {
+        // Terms and Symbols
+        if (unitData.data.termsAndSymbols && unitData.data.termsAndSymbols.length > 0) {
+          const termsDiv = document.createElement('div');
+          const termsHeader = document.createElement('h3');
+          termsHeader.textContent = 'Terms and Symbols:';
+          termsHeader.appendChild(makeHelpIcon("A list of the key terms and their associated symbols used in this unit– including those for core glyphs, echo tokens, and the narrative information found in the flow blocks."));
+          termsDiv.appendChild(termsHeader);
+
+          const ul = document.createElement('ul');
+          unitData.data.termsAndSymbols.forEach(term => {
+            const li = document.createElement('li');
+            li.textContent = `${term.symbol}: ${term.description}`;
+            ul.appendChild(li);
+          });
+          termsDiv.appendChild(ul);
+          container.appendChild(termsDiv);
+          contentFound = true;
+        }
+        // Core Glyphs
+        if (unitData.data.coreGlyphs && unitData.data.coreGlyphs.length > 0) {
+          const glyphsDiv = document.createElement('div');
+          const glyphsHeader = document.createElement('h3');
+          glyphsHeader.textContent = 'Core Glyphs:';
+          glyphsHeader.appendChild(makeHelpIcon("These are the primary glyphs (symbols) representing foundational concepts or motifs of inner self and self perception for this unit. They act as visual or symbolic anchors in the structure related to relationship with inner self."));
+          glyphsDiv.appendChild(glyphsHeader);
+          const ul = document.createElement('ul');
+          unitData.data.coreGlyphs.forEach(glyph => {
+            const li = document.createElement('li');
+            li.textContent = `${glyph.symbol}: ${glyph.description}`;
+            ul.appendChild(li);
+          });
+          glyphsDiv.appendChild(ul);
+          container.appendChild(glyphsDiv);
+          contentFound = true;
+        }
+        // Memory Anchors
+        if (unitData.data.memoryAnchors && unitData.data.memoryAnchors.length > 0) {
+          const anchorsDiv = document.createElement('div');
+          const anchorsHeader = document.createElement('h3');
+          anchorsHeader.textContent = 'Memory Anchors:';
+          anchorsHeader.appendChild(makeHelpIcon("Special reference points or anchors used to connect memories or ideas within the structure by associating specific concepts of idenity with personal experiences taking place in shared objective space."));
+          anchorsDiv.appendChild(anchorsHeader);
+          const ul = document.createElement('ul');
+          unitData.data.memoryAnchors.forEach(anchor => {
+            const li = document.createElement('li');
+            li.textContent = anchor;
+            ul.appendChild(li);
+          });
+          anchorsDiv.appendChild(ul);
+          container.appendChild(anchorsDiv);
+          contentFound = true;
+        }
+        // Pattern Threads
+        if (unitData.data.patternThreads && unitData.data.patternThreads.length > 0) {
+          const threadsDiv = document.createElement('div');
+          const threadsHeader = document.createElement('h3');
+          threadsHeader.textContent = 'Pattern Threads:';
+          threadsHeader.appendChild(makeHelpIcon("Pattern Threads are named narrative or conceptual paths that weave through multiple units, highlighting recurring themes, motifs, or logical flows in known behavior and decision making."));
+          threadsDiv.appendChild(threadsHeader);
+          const ul = document.createElement('ul');
+          unitData.data.patternThreads.forEach(thread => {
+            const li = document.createElement('li');
+            li.textContent = thread;
+            ul.appendChild(li);
+          });
+          threadsDiv.appendChild(ul);
+          container.appendChild(threadsDiv);
+          contentFound = true;
+        }
+        // Echo Tokens
+        if (unitData.data.echoTokens && unitData.data.echoTokens.length > 0) {
+          const tokensDiv = document.createElement('div');
+          const echoHeader = document.createElement('h3');
+          echoHeader.textContent = 'Echo Tokens:';
+          echoHeader.appendChild(makeHelpIcon("Echo Tokens are keywords, motifs, or symbols– similar to Core Glyphs, but more related to outer experience and perception of self through reflection in others and the outside world."));
+          tokensDiv.appendChild(echoHeader);
+          const ul = document.createElement('ul');
+          unitData.data.echoTokens.forEach(token => {
+            const li = document.createElement('li');
+            li.textContent = token;
+            ul.appendChild(li);
+          });
+          tokensDiv.appendChild(ul);
+          container.appendChild(tokensDiv);
+          contentFound = true;
+        }
+        // Flow Blocks (showing integral echoes)
+        if (unitData.data.flowBlocks && unitData.data.flowBlocks.length > 0) {
+          const flowBlocksDiv = document.createElement('div');
+          const flowHeader = document.createElement('h3');
+          flowHeader.textContent = 'Flow Blocks:';
+          flowHeader.appendChild(makeHelpIcon("Flow Blocks represent sequences of content, logic, or narrative steps within this unit, showing how information or ideas progress or connect. Symbols defined in the Terms List above appear in the flow blocks as guide posts that inform the narrative flow with explicit context"));
+          flowBlocksDiv.appendChild(flowHeader);
+          unitData.data.flowBlocks.forEach(block => {
+            const blockDiv = document.createElement('div');
+            blockDiv.classList.add('flow-block');
+            const blockTitleElem = document.createElement('h4');
+            blockTitleElem.textContent = block.title;
+            blockDiv.appendChild(blockTitleElem);
+            if (block.glyphstream && Array.isArray(block.glyphstream)) {
+              const glyphstreamDiv = document.createElement('div');
+              renderGlyphstream(block.glyphstream, glyphstreamDiv);
+              blockDiv.appendChild(glyphstreamDiv);
+            }
+            flowBlocksDiv.appendChild(blockDiv);
+          });
+          container.appendChild(flowBlocksDiv);
+          contentFound = true;
+        }
+      }
+      if (!contentFound) {
+        container.innerHTML = `<p>No detailed data available for this Core Unit Integration.</p>`;
+      }
+
+      // --- INTEGRAL ECHOES for CORE UNIT INTEGRATION ---
+      if (unitData._siblingEchoes && unitData._siblingEchoes.length > 0) {
+        const echoesDiv = document.createElement('div');
+        const echoesHeader = document.createElement('h3');
+        echoesHeader.textContent = 'Integral Echoes:';
+        echoesHeader.appendChild(makeHelpIcon("Integral Echoes are other units (Dreamstate Echo or Narrative Lattice) that are directly referenced, relevant, or woven into this unit’s structure, forming essential links or conceptual bridges within the lattice and the overall story told within its content."));
+        echoesDiv.appendChild(echoesHeader);
+        unitData._siblingEchoes.forEach(echo => {
+          const echoDiv = document.createElement('div');
+          echoDiv.classList.add('integral-echo-modal');
+          const echoTitle = document.createElement('h4');
+          echoTitle.textContent = echo.titleCore || "(untitled)";
+          echoDiv.appendChild(echoTitle);
+
+          if (echo.constructType === "DREAMSTATE ECHO") {
+            displayDreamstateEcho(echo, echoDiv);
+          } else if (echo.constructType === "NARRATIVE LATTICE") {
+            displayNarrativeLattice(echo, echoDiv, null);
+          }
+          echoesDiv.appendChild(echoDiv);
+        });
+        container.appendChild(echoesDiv);
+      }
+
+    }
+
+    function displayExpansionUnit(unitData, container) {
+      const unitType = document.createElement('p');
+      unitType.innerHTML = `<strong>Construct Type:</strong> ${unitData.constructType}`;
+      container.appendChild(unitType);
+      if (unitData.description) {
+        const descriptionPara = document.createElement('p');
+        descriptionPara.innerHTML = `<br><strong>Description:</strong><br>${unitData.description}`;
+        container.appendChild(descriptionPara);
+      }
+      if (unitData.data) {
+        if (unitData.data.linkedConcepts && unitData.data.linkedConcepts.length > 0) {
+          const conceptsDiv = document.createElement('div');
+          conceptsDiv.innerHTML = '<br><strong>Linked Concepts:</strong>';
+          const ul = document.createElement('ul');
+          unitData.data.linkedConcepts.forEach(concept => {
+            const li = document.createElement('li');
+            li.textContent = concept;
+            ul.appendChild(li);
+          });
+          conceptsDiv.appendChild(ul);
+          container.appendChild(conceptsDiv);
+        }
+        if (unitData.data.notes) {
+          const notesPara = document.createElement('p');
+          notesPara.innerHTML = `<br><strong>Notes:</strong><br>${unitData.data.notes}`;
+          container.appendChild(notesPara);
+        }
+      } else {
+        const noData = document.createElement('p');
+        noData.innerText = "(No detailed data available for this Expansion Unit.)";
+        container.appendChild(noData);
+      }
+
+      // --- INTEGRAL ECHOES for EXPANSION UNIT (sibling echoes) ---
+      if (unitData._siblingEchoes && unitData._siblingEchoes.length > 0) {
+        const echoesDiv = document.createElement('div');
+        echoesDiv.innerHTML = '<h3>Integral Echoes</h3>';
+        unitData._siblingEchoes.forEach(echo => {
+          const echoDiv = document.createElement('div');
+          echoDiv.classList.add('integral-echo-modal');
+          const echoTitle = document.createElement('h4');
+          echoTitle.textContent = echo.titleCore || "(untitled)";
+          echoDiv.appendChild(echoTitle);
+
+          if (echo.constructType === "DREAMSTATE ECHO") {
+            displayDreamstateEcho(echo, echoDiv);
+          } else if (echo.constructType === "NARRATIVE LATTICE") {
+            displayNarrativeLattice(echo, echoDiv, null);
+          }
+          echoesDiv.appendChild(echoDiv);
+        });
+        container.appendChild(echoesDiv);
+      }
+    }
+
+    // --- GLYPHSTREAM HELPER ---
+    function renderGlyphstream(glyphstream, container) {
+      if (!Array.isArray(glyphstream)) return;
+      glyphstream.forEach(channel => {
+        if (channel.channel && channel.sequence && channel.sequence.length > 0) {
+          const div = document.createElement('div');
+          div.innerHTML = `<strong>${channel.channel}:</strong> ${channel.sequence.join(' | ')}`;
+          container.appendChild(div);
+        }
+      });
+    }
+
+    // --- SEARCH ---
+
+    document.getElementById('search').addEventListener('input', function() {
+      const filter = this.value.toLowerCase();
+      const allEchoLists = document.querySelectorAll('.core-unit ul');
+      allEchoLists.forEach(echoList => {
+        const listItems = echoList.querySelectorAll('li');
+        listItems.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(filter) ? '' : 'none';
+        });
+      });
+    });
+
+    // --- CONTENT-SEARCH ---
+
+    document.getElementById('content-search').addEventListener('input', function() {
+      const filter = this.value.toLowerCase();
+      if (filter === "") {
+        populateEchoes();
+        return;
+      }
+      const allEchoLists = document.querySelectorAll('.core-unit ul');
+      allEchoLists.forEach(echoList => {
+        const listItems = echoList.querySelectorAll('li');
+        listItems.forEach(item => {
+          const displayItem = item._displayItem;
+          if (!displayItem) {
+            item.style.display = '';
+            return;
+          }
+          // Gather all relevant content as a single string for searching
+          let contentString = '';
+          const unit = displayItem.unit;
+          if (unit) {
+            function extractStrings(obj) {
+              if (typeof obj === "string") {
+                contentString += obj + " ";
+              } else if (Array.isArray(obj)) {
+                obj.forEach(extractStrings);
+              } else if (typeof obj === "object" && obj !== null) {
+                for (const k in obj) extractStrings(obj[k]);
+              }
+            }
+            extractStrings(unit);
+          }
+          const matchIndex = contentString.toLowerCase().indexOf(filter);
+          if (filter === "" || matchIndex !== -1) {
+            item.style.display = '';
+            // Highlight match in the LI (showing content preview with highlight)
+            const previewLength = 60;
+            let preview = contentString;
+            if (matchIndex !== -1 && filter !== "") {
+              const start = Math.max(0, matchIndex - 20);
+              const end = Math.min(contentString.length, matchIndex + filter.length + 40);
+              preview = contentString.substring(start, end);
+              // Highlight all matches
+              const regex = new RegExp(`(${filter})`, "gi");
+              preview = preview.replace(regex, '<mark>$1</mark>');
+            }
+            // Show the title and the content preview with highlight
+            item.innerHTML = `<span>${displayItem.unit.titleCore || "(untitled)"}</span><br><small>${preview}</small>`;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    function exportModalToMarkdown(displayItem, sectionLevel = 1, seen = new Set()) {
+      // Get main unit and block (block is for lattices)
+      const unit = displayItem.unit;
+      const block = displayItem.block;
+
+      // Prevent infinite recursion on circular references
+      const uniqueKey = (unit.constructType || "") + "|" + (unit.titleCore || "");
+      if (seen.has(uniqueKey)) return '';
+      seen.add(uniqueKey);
+
+      let md = `${'#'.repeat(sectionLevel)} ${unit.titleCore || '(untitled)'}\n\n`;
+      md += `**Type:** ${unit.constructType || ''}\n\n`;
+
+      // --- Helper: format sections ---
+      function formatSection(title, content, depth = sectionLevel + 1) {
+        if (!content) return '';
+        let header = `${'#'.repeat(depth)} ${title}\n`;
+        if (Array.isArray(content)) {
+          if (title === "flowBlocks") {
+            let out = `${header}`;
+            for (const block of content) {
+              out += `${'#'.repeat(depth+1)} ${block.title}\n`;
+              // Export glyphstream
+              if (block.glyphstream && Array.isArray(block.glyphstream)) {
+                for (const channel of block.glyphstream) {
+                  if (channel.channel && Array.isArray(channel.sequence)) {
+                    out += `- **${channel.channel}**: ${channel.sequence.join(' | ')}\n`;
+                  }
+                }
+              }
+              out += `\n`;
+            }
+            return out;
+          }
+          // Regular array handling
+          let out = header;
+          for (const item of content) {
+            if (typeof item === "string") {
+              out += `- ${item}\n`;
+            } else if (typeof item === "object") {
+              out += `- ` + Object.entries(item).map(([k, v]) => `**${k}**: ${v}`).join(", ") + `\n`;
+            }
+          }
+          out += `\n`;
+          return out;
+        } else if (typeof content === "object") {
+          let out = header;
+          for (const [k, v] of Object.entries(content)) {
+            out += `- **${k}**: ${v}\n`;
+          }
+          out += `\n`;
+          return out;
+        } else if (typeof content === "string") {
+          return `${header}${content}\n\n`;
+        }
+        return '';
+      }
+
+      // --- Export main unit fields ---
+      for (const [key, value] of Object.entries(unit)) {
+        if (typeof value === "string" && key !== "titleCore" && key !== "constructType") {
+          md += formatSection(key, value);
+        }
+        // NEW: if this is a DREAMSTATE ECHO and key is "glyphstream", export it pretty!
+        if (key === "glyphstream" && Array.isArray(value)) {
+          md += "### Glyphstream\n";
+          for (const channel of value) {
+            if (channel.channel && Array.isArray(channel.sequence)) {
+              md += `- **${channel.channel}**: ${channel.sequence.join(' | ')}\n`;
+            }
+          }
+          md += "\n";
+          // Special: Look for "Context Breakdown" channel
+          const contextChannel = value.find(channel => channel.channel === "Context Breakdown");
+          if (contextChannel && contextChannel.sequence && contextChannel.sequence.length > 0) {
+            md += "### Context Breakdown\n";
+            md += contextChannel.sequence.join('\n') + '\n\n';
+          }
+        }
+        if (key === "triadicGlyphs" && Array.isArray(value)) {
+          md += "### Triadic Glyphs\n";
+          value.forEach(triad => {
+            // Customize this to match your data structure!
+            md += `- ${triad.title ? triad.title + ': ' : ''}${triad.sequence ? triad.sequence.join(' | ') : ''}\n`;
+          });
+          md += '\n';
+        }
+      }
+      if (unit.data && typeof unit.data === "object") {
+        for (const [key, value] of Object.entries(unit.data)) {
+          md += formatSection(key, value);
+        }
+      }
+
+
+
+      // --- Gather integral echoes (block and _siblingEchoes), just like your modal ---
+      let integralEchoes = [];
+      // 1. From block property (like in lattices)
+      if (block && typeof block === "object") {
+        for (const [k, v] of Object.entries(block)) {
+          if (Array.isArray(v)) {
+            v.forEach(item => {
+              if (item && (item.constructType === "DREAMSTATE ECHO" || item.constructType === "NARRATIVE LATTICE")) {
+                integralEchoes.push({
+                  unit: item
+                });
+              } else if (typeof item === "string") {
+                integralEchoes.push({
+                  unit: {
+                    titleCore: item,
+                    constructType: "REFERENCE_STRING"
+                  }
+                });
+              }
+            });
+          } else if (v && (v.constructType === "DREAMSTATE ECHO" || v.constructType === "NARRATIVE LATTICE") && v !== unit) {
+            integralEchoes.push({
+              unit: v
+            });
+          } else if (typeof v === "string") {
+            integralEchoes.push({
+              unit: {
+                titleCore: v,
+                constructType: "REFERENCE_STRING"
+              }
+            });
+          }
+        }
+      }
+      // 2. From _siblingEchoes property (core units, expansions)
+      if (Array.isArray(unit._siblingEchoes) && unit._siblingEchoes.length > 0) {
+        unit._siblingEchoes.forEach(echo => {
+          integralEchoes.push({
+            unit: echo
+          });
+        });
+      }
+
+      // --- Remove duplicates ---
+      const seenEchoKeys = new Set();
+      const uniqueEchoes = [];
+      for (const echo of integralEchoes) {
+        const key = (echo.unit.constructType || "") + "|||" + (echo.unit.titleCore || "");
+        if (!seenEchoKeys.has(key)) {
+          seenEchoKeys.add(key);
+          uniqueEchoes.push(echo);
+        }
+      }
+
+      // --- Recursively export each integral echo ---
+      if (uniqueEchoes.length > 0) {
+        md += `${'#'.repeat(sectionLevel+1)} Integral Echoes\n\n`;
+        for (const echoDisplayItem of uniqueEchoes) {
+          if (echoDisplayItem.unit.constructType === "REFERENCE_STRING") {
+            md += `- (Reference) ${echoDisplayItem.unit.titleCore}\n\n`;
+          } else {
+            md += exportModalToMarkdown(echoDisplayItem, sectionLevel + 2, seen); // RECURSION
+          }
+        }
+      }
+
+      return md;
+    }
+
+
+    document.getElementById('export-markdown-btn').onclick = function() {
+      if (!currentModalDisplayItem) {
+        alert("No unit loaded!");
+        return;
+      }
+      const md = exportModalToMarkdown(currentModalDisplayItem);
+      // Copy to clipboard:
+      navigator.clipboard.writeText(md).then(() => {
+        alert("Markdown copied to clipboard!");
+      });
+      // Optional: Uncomment the next line to also trigger download
+      downloadMarkdown(md, currentModalDisplayItem.unit.titleCore || "export");
+    };
+
+
+    function downloadMarkdown(md, filename) {
+      const blob = new Blob([md], {
+        type: "text/markdown"
+      });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename.replace(/\s+/g, '_') + ".md";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    document.getElementById('copy-plain-text-btn').onclick = function() {
+      // Get the modal content as text (not HTML)
+      var modalTextElem = document.getElementById('modal-text');
+      if (!modalTextElem) {
+        alert("No modal content found.");
+        return;
+      }
+      // Get all text content (no formatting, no HTML tags)
+      var plainText = modalTextElem.innerText || modalTextElem.textContent || "";
+      if (!plainText) {
+        alert("Nothing to copy!");
+        return;
+      }
+      // Copy to clipboard
+      navigator.clipboard.writeText(plainText).then(() => {
+        alert("Plain text copied to clipboard!");
+      });
+    };
+
+
+
+    function getTopSymbols(allUnits, topN = 20) {
+      const symbolCounts = {};
+      // List of symbols to omit
+      const omit = new Set(["⟶", "→", "⌁", "☲", "⚠", "✖", "⊘", "⧗"]);
+
+      function scanForSymbols(str) {
+        if (typeof str !== "string") return;
+        // Emoji & Symbols regex
+        const regex = /[\p{Emoji}\p{So}\p{Sc}\p{Sk}\p{Sm}\p{S}]/gu;
+        let matches = str.match(regex);
+        if (matches) {
+          matches.forEach(sym => {
+            if (omit.has(sym)) return; // skip omitted symbols
+            symbolCounts[sym] = (symbolCounts[sym] || 0) + 1;
+          });
+        }
+      }
+
+      function extractAllStrings(obj) {
+        if (typeof obj === "string") scanForSymbols(obj);
+        else if (Array.isArray(obj)) obj.forEach(extractAllStrings);
+        else if (typeof obj === "object" && obj !== null)
+          for (const k in obj) extractAllStrings(obj[k]);
+      }
+
+      allUnits.forEach(unit => extractAllStrings(unit));
+
+      // Sort by count, descending
+      const sorted = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1]);
+      return sorted.slice(0, topN);
+    }
+
+
+    function getTopWords(allUnits, topN = 20) {
+      // Common English stop words to ignore (expand if you want!)
+      const stopWords = new Set([
+        "the", "and", "a", "of", "to", "in", "for", "on", "is", "with", "as", "by", "at", "an", "be", "are", "or", "that", "this", "it", "from", "was", "which", "but", "not", "have", "has", "had", "were", "will", "can", "if", "their", "so", "its", "may", "do", "does", "did", "our", "your", "my", "i", "me", "you", "we", "they", "them", "he", "she", "his", "her", "him", "us", "about", "into", "out", "up", "down", "over", "under", "then", "than", "would", "should", "could", "dreamstate", "echo", "s", "t", "am", "block", "triadic", "glyph", "breakdown", "what", "flow", "context", "just"
+      ]);
+      const counts = {};
+
+      function extractAllStrings(obj) {
+        if (typeof obj === "string") {
+          // Split on non-letter (including numbers, punctuation, symbols)
+          obj.toLowerCase().split(/[^a-zA-Z]+/).forEach(word => {
+            if (!word || stopWords.has(word)) return;
+            counts[word] = (counts[word] || 0) + 1;
+          });
+        } else if (Array.isArray(obj)) {
+          obj.forEach(extractAllStrings);
+        } else if (typeof obj === "object" && obj !== null) {
+          for (const k in obj) extractAllStrings(obj[k]);
+        }
+      }
+
+      allUnits.forEach(unit => extractAllStrings(unit));
+
+      // Sort by count, descending
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      return sorted.slice(0, topN);
+    }
+
+
+    function getTopAdjacentSymbolPairs(allUnits, topN = 20) {
+      const omit = new Set(["⟶", "⌁", "☲", "⚠", "✖", "⊘", "⧗"]);
+      const pairCounts = {};
+
+      function scanForAdjacentPairs(str) {
+        if (typeof str !== "string") return;
+        const regex = /[\p{Emoji}\p{So}\p{Sc}\p{Sk}\p{Sm}\p{S}]/gu;
+        const matches = (str.match(regex) || []).filter(sym => !omit.has(sym));
+        for (let i = 0; i < matches.length - 1; ++i) {
+          const a = matches[i],
+            b = matches[i + 1];
+          if (a === b) continue; // skip pairs of same symbol, optional
+          const key = a + " " + b;
+          pairCounts[key] = (pairCounts[key] || 0) + 1;
+        }
+      }
+
+      function extractAllStrings(obj) {
+        if (typeof obj === "string") scanForAdjacentPairs(obj);
+        else if (Array.isArray(obj)) obj.forEach(extractAllStrings);
+        else if (typeof obj === "object" && obj !== null)
+          for (const k in obj) extractAllStrings(obj[k]);
+      }
+
+      allUnits.forEach(unit => extractAllStrings(unit));
+      const sortedPairs = Object.entries(pairCounts).sort((a, b) => b[1] - a[1]);
+      return sortedPairs.slice(0, topN);
+    }
+
+
+    // --- STAT CARD ---
+    document.getElementById('show-stats-btn').onclick = function() {
+      // 1. Gather all units (anywhere in triadData)
+      let allUnits = [];
+
+      function collectUnits(obj) {
+        if (!obj) return;
+        if (Array.isArray(obj)) obj.forEach(collectUnits);
+        else if (typeof obj === "object" && obj !== null) {
+          // If this looks like a unit, add it
+          if (obj.constructType && obj.titleCore) allUnits.push(obj);
+          for (const k in obj) collectUnits(obj[k]);
+        }
+      }
+      collectUnits(triadData);
+
+      // 2. Count interesting things
+      let stats = {
+        total: allUnits.length,
+        lattices: allUnits.filter(u => u.constructType === "NARRATIVE LATTICE").length,
+        echoes: allUnits.filter(u => u.constructType === "DREAMSTATE ECHO").length,
+        coreUnits: allUnits.filter(u => u.constructType === "CORE UNIT INTEGRATION").length,
+        // Add more as you wish!
+      };
+
+      // 3. Top 20 Symbols
+      const topSymbols = getTopSymbols(allUnits, 20);
+      let symbolHtml = '<h3>Top 20 Symbols</h3><ul>';
+      topSymbols.forEach(([sym, count]) => {
+        symbolHtml += `<li style="font-size:1.5em;display:inline-block;width:2em;text-align:center">${sym}</li>: ${count}<br>`;
+      });
+      symbolHtml += '</ul>';
+
+
+      // 4. Top 20 Words
+      const topWords = getTopWords(allUnits, 20);
+      let wordsHtml = '<h3>Top 20 Words</h3><ul>';
+      topWords.forEach(([word, count]) => {
+        wordsHtml += `<li><strong>${word}</strong>: ${count}</li>`;
+      });
+      wordsHtml += '</ul>';
+
+      // 5. Top 20 Symbol Pairs
+      const topAdjacentSymbolPairs = getTopAdjacentSymbolPairs(allUnits, 20);
+      let pairsHtml = '<h3>Top 20 Adjacent Symbol Pairs</h3><ul>';
+      topAdjacentSymbolPairs.forEach(([pair, count]) => {
+        pairsHtml += `<li style="font-size:1.4em">${pair.replace(' ', ' &nbsp;')} : <span style="font-size:0.8em">${count}</span></li>`;
+      });
+      pairsHtml += '</ul>';
+
+
+      // 6. Format nice HTML for the modal
+      let html = `<h2>Stats</h2><ul>`;
+      for (const [label, value] of Object.entries(stats)) {
+        html += `<li><strong>${label}:</strong> ${value}</li>`;
+      }
+      html += `</ul>`;
+      html += symbolHtml;
+      html += pairsHtml;
+      html += wordsHtml;
+      html += `<button onclick="document.getElementById('stats-modal').style.display='none'">Close</button>`;
+
+      // 7. Show modal
+      const modal = document.getElementById('stats-modal');
+      modal.innerHTML = html;
+      modal.style.display = 'block';
+    };
+
+    // --- CURSOR SHIMMER ---
+
+    document.addEventListener('mousemove', function(e) {
+      const shimmer = document.createElement('div');
+      shimmer.classList.add('cursor-shimmer');
+      document.body.appendChild(shimmer);
+      shimmer.style.left = `${e.clientX - shimmer.offsetWidth / 2}px`;
+      shimmer.style.top = `${e.clientY - shimmer.offsetHeight / 2}px`;
+      shimmer.addEventListener('animationend', () => {
+        shimmer.remove();
+      });
+    });
+
+    // --- CLOSE MODAL BINDING ---
+
+    // --- Stats Modal: Click-outside-to-close and ESC-to-close ---
+    document.addEventListener('mousedown', function(e) {
+      const modal = document.getElementById('stats-modal');
+      // Only act if the modal is open
+      if (modal.style.display === 'block') {
+        // If the click is outside the modal (not inside its children or the button)
+        if (!modal.contains(e.target) && e.target.id !== 'show-stats-btn') {
+          modal.style.display = 'none';
+        }
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.getElementById('stats-modal').style.display = 'none';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadProfile(currentProfileIndex); // This loads the initial profile and background!
+      document.querySelector('.modal-close').onclick = closeModal;
+    });
+
+
+
+    document.getElementById('export-all-btn').onclick = async function() {
+      function sanitizeFilename(name) {
+        return name.replace(/[\\/:"*?<>|]+/g, "_").replace(/\s+/g, "_").slice(0, 64);
+      }
+
+      // Gather all display items in interface order
+      const allDisplayItems = [];
+      [
+        ['identity', identityOrder, 'identity-echoes'],
+        ['vector', vectorOrder, 'vector-echoes'],
+        ['thread', threadOrder, 'thread-echoes']
+      ].forEach(([mod, canonicalOrder, htmlId]) => {
+        const coreData = triadData[mod] || {};
+        const expansionArr = ((triadData.expansion || {})[mod]) || [];
+        const echoesCore = ((triadData.echoes || {})[mod]) || {};
+        const echoesExpansion = (((triadData.echoes || {}).expansion || {})[mod]) || {};
+        const glyphOrder = buildGlyphOrder(coreData, expansionArr, echoesCore, echoesExpansion, canonicalOrder);
+        const displayList = collectDisplayItems(coreData, expansionArr, echoesCore, echoesExpansion, glyphOrder);
+        for (const displayItem of displayList) allDisplayItems.push(displayItem);
+      });
+
+      const zip = new JSZip();
+      const mdFolder = zip.folder("Dreamworks/Dreamworks Markdown Files");
+      const txtFolder = zip.folder("Dreamworks/Dreamworks Plain Text");
+
+      let dreamstateMD = `# Dreamstate Export (${(new Date()).toISOString().slice(0,10)})\n\n`;
+      let dreamstateTXT = `Dreamstate Export ${(new Date()).toISOString().slice(0,10)}\n\n`;
+
+      for (const displayItem of allDisplayItems) {
+        const title = displayItem.unit.titleCore || "(untitled)";
+        const safeName = sanitizeFilename(title);
+
+        // --- Markdown ---
+        const mdContent = exportModalToMarkdown(displayItem);
+        mdFolder.file(safeName + ".md", mdContent);
+        dreamstateMD += `\n\n---\n\n${mdContent}`;
+
+        // --- Plain text (blocky modal style) ---
+        const tempDiv = document.createElement("div");
+        // Add title for .txt
+        const titleElem = document.createElement('h3');
+        titleElem.textContent = title;
+        tempDiv.appendChild(titleElem);
+
+        // Use your real modal content rendering logic
+        if (displayItem.unit.constructType === "DREAMSTATE ECHO") {
+          displayDreamstateEcho(displayItem.unit, tempDiv);
+        } else if (displayItem.unit.constructType === "NARRATIVE LATTICE") {
+          displayNarrativeLattice(displayItem.unit, tempDiv, displayItem.block);
+        } else if (displayItem.unit.constructType === "CORE UNIT INTEGRATION") {
+          displayCoreUnitIntegration(displayItem.unit, tempDiv);
+        } else if (displayItem.unit.constructType === "EXPANSION UNIT") {
+          displayExpansionUnit(displayItem.unit, tempDiv);
+        } else {
+          const p = document.createElement('p');
+          p.innerText = `No specific display format for this construct type: ${displayItem.unit.constructType}`;
+          tempDiv.appendChild(p);
+        }
+
+        // Use .innerText for natural blocky spacing (as the modal)
+        const txtContent = tempDiv.innerText.trim() + '\n';
+        txtFolder.file(safeName + ".txt", txtContent);
+        dreamstateTXT += `\n\n---\n\n${txtContent}`;
+      }
+
+      // README.txt and stat_sheet.txt as before...
+      zip.file("Dreamworks/README.txt", `Dreamworks Export
+
+This folder contains:
+- Individual Markdown files for each Dreamworks unit (in "Dreamworks Markdown Files")
+- Individual plain text files for each unit (in "Dreamworks Plain Text")
+- Full Dreamstate .md and .txt files containing all content in display order
+- stat_sheet.txt: summary stats and a list of all unit titles
+
+**Tips for viewing these files:**
+- For best results, open the .md and .txt files in a modern code editor (e.g., VSCode, Sublime, Atom) with UTF-8 encoding.
+- Standard text editors like Notepad (Windows) or TextEdit (Mac) may NOT display emoji and special symbols correctly. If you see odd characters, open the file in VSCode and select "Reopen with Encoding" > "UTF-8".
+- The formatting in the .txt files is optimized for readability in code editors. The UI display will always look best!
+
+Any questions, reach out to the Dreamworks team or brookly-rob.
+
+Enjoy exploring your exported Dreamstate!`);
+
+      let allUnits = [];
+
+      function collectUnits(obj) {
+        if (!obj) return;
+        if (Array.isArray(obj)) obj.forEach(collectUnits);
+        else if (typeof obj === "object" && obj !== null) {
+          if (obj.constructType && obj.titleCore) allUnits.push(obj);
+          for (const k in obj) collectUnits(obj[k]);
+        }
+      }
+      collectUnits(triadData);
+      let stats = {
+        total: allUnits.length,
+        lattices: allUnits.filter(u => u.constructType === "NARRATIVE LATTICE").length,
+        echoes: allUnits.filter(u => u.constructType === "DREAMSTATE ECHO").length,
+        coreUnits: allUnits.filter(u => u.constructType === "CORE UNIT INTEGRATION").length,
+      };
+      let statText = `Dreamworks Stat Sheet\n\n`;
+      for (const [label, value] of Object.entries(stats)) {
+        statText += `${label}: ${value}\n`;
+      }
+      statText += `\n---\nOrdered Content Titles:\n\n`;
+      for (const displayItem of allDisplayItems) {
+        statText += `- ${displayItem.unit.titleCore || "(untitled)"}\n`;
+      }
+      zip.file("Dreamworks/stat_sheet.txt", statText);
+
+      // Dreamstate all-in-one files
+      const datestamp = (new Date()).toISOString().slice(0, 10);
+      zip.file(`Dreamworks/Dreamstate ${datestamp}.md`, dreamstateMD);
+      zip.file(`Dreamworks/Dreamstate ${datestamp}.txt`, dreamstateTXT);
+
+      // Download
+      const content = await zip.generateAsync({
+        type: "blob"
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = "Dreamworks.zip";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      }, 1000);
+    };
+  </script>
+</body>
+
+</html>
